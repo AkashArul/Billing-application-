@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flower Market Billing Software - பூ சந்தை பில்லிங் மென்பொருள்</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            /* Hide body background and force display reset */
+            body, html {
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Hide all default app structures */
+            #loginScreen, 
+            #main-app-container,
+            header,
+            aside,
+            nav,
+            footer,
+            .no-print {
+                display: none !important;
+            }
+
+            /* Display ONLY the printable target container */
+            .printable-active {
+                display: block !important;
+                visibility: visible !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 15px !important;
+                background: white !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .printable-active * {
+                visibility: visible !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- USER LOGIN SCREEN -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+            <!-- Header Graphic -->
+            <div class="bg-gradient-to-r from-brand-800 via-brand-700 to-rose-700 p-8 text-center text-white relative">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl border border-white/20 mb-3 shadow-inner">
+                    <i class="fa-solid fa-spa text-yellow-300 text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold tracking-wide" id="loginHeaderShopName">ஸ்ரீ லட்சுமி மலர் சந்தை</h2>
+                <p class="text-xs text-rose-100 mt-1 font-medium">பூ சந்தை பில்லிங் மென்பொருள் (Billing Software)</p>
+            </div>
+
+            <!-- Login Form -->
+            <form onsubmit="handleLocalLogin(event)" class="p-6 md:p-8 space-y-5">
+                <div class="text-center">
+                    <h3 class="text-lg font-bold text-slate-900">உள்நுழைவு (Sign In)</h3>
+                    <p class="text-xs text-slate-500 mt-1">உங்கள் பயனர் பெயர் மற்றும் கடவுச்சொல்லை உள்ளிடவும்</p>
+                </div>
+
+                <div id="loginErrorMessage" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold text-center">
+                    பயனர் பெயர் அல்லது கடவுச்சொல் தவறானது!
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பயனர் பெயர் (Username / Email)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="loginUsername" required placeholder="Akash@405" class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கடவுச்சொல் (Password)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>உள்நுழை (Sign In)</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (CONTAINER) -->
+    <div id="main-app-container" class="hidden flex-1 flex flex-col">
+
+        <!-- Top Header / Navigation -->
+        <header class="bg-gradient-to-r from-brand-800 via-brand-700 to-rose-700 text-white shadow-md sticky top-0 z-30 no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/10 p-2.5 rounded-xl border border-white/20 shadow-inner">
+                        <i class="fa-solid fa-spa text-yellow-300 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 id="headerShopName" class="text-xl font-bold tracking-tight">ஸ்ரீ லட்சுமி மலர் சந்தை</h1>
+                        <p id="headerShopSub" class="text-xs text-rose-100 font-medium">Sri Lakshmi Flower Market Commission Agent & Billing</p>
+                    </div>
+                </div>
+
+                <!-- User Profile & Quick Actions -->
+                <div class="flex items-center space-x-3 text-xs">
+                    <div class="hidden md:block text-right border-r border-rose-500/40 pr-4">
+                        <p class="font-semibold text-rose-100" id="headerPhone"><i class="fa-solid fa-phone mr-1"></i> +91 98765 43210</p>
+                        <p class="text-rose-200" id="headerLocation"><i class="fa-solid fa-location-dot mr-1"></i> கோயம்பேடு, சென்னை</p>
+                    </div>
+
+                    <!-- User Account Badge -->
+                    <div class="flex items-center gap-2.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
+                        <div class="w-7 h-7 rounded-full bg-yellow-400 text-brand-900 font-bold flex items-center justify-center border border-white/40 text-xs uppercase" id="userAvatarText">A</div>
+                        <div class="text-left hidden sm:block">
+                            <p id="userNameDisplay" class="font-bold text-white text-xs leading-none">Super Admin</p>
+                            <p id="userRoleDisplay" class="text-[10px] text-yellow-300 leading-tight font-semibold">SUPER ADMIN</p>
+                        </div>
+                        <button onclick="handleSignOut()" title="Sign Out" class="ml-1 text-rose-200 hover:text-white p-1">
+                            <i class="fa-solid fa-right-from-bracket text-sm"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="resetAllData()" class="bg-rose-900/60 hover:bg-rose-900 text-rose-200 px-2.5 py-1.5 rounded-lg border border-rose-500/30 transition text-xs font-medium flex items-center gap-1.5" title="Reset Data">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6 no-print">
+            
+            <!-- Sidebar Navigation -->
+            <aside class="w-full md:w-64 flex-shrink-0">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-3 sticky top-24">
+                    <nav class="space-y-1">
+                        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition bg-brand-50 text-brand-700">
+                            <i class="fa-solid fa-chart-pie w-5"></i>
+                            <span>முகப்பு (Dashboard)</span>
+                        </button>
+                        <button onclick="switchTab('dailyEntry')" id="nav-dailyEntry" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-truck-ramp-box w-5"></i>
+                            <span>தோட்டக்காரர் வரவு</span>
+                        </button>
+                        <button onclick="switchTab('customerEntry')" id="nav-customerEntry" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-cart-shopping w-5"></i>
+                            <span>கஸ்டமர் விற்பனை</span>
+                        </button>
+                        <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-file-invoice-dollar w-5"></i>
+                            <span>சப்ளையர் பில்</span>
+                        </button>
+                        <button onclick="switchTab('customerBillPrint')" id="nav-customerBillPrint" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-receipt w-5"></i>
+                            <span>வாடிக்கையாளர் பில்</span>
+                        </button>
+                        
+                        <div class="pt-3 pb-1 px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">மேலாண்மை (Masters)</div>
+                        
+                        <button onclick="switchTab('masterFlowers')" id="nav-masterFlowers" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-seedling w-5"></i>
+                            <span>பூக்கள் வகை</span>
+                        </button>
+                        <button onclick="switchTab('masterSuppliers')" id="nav-masterSuppliers" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-users w-5"></i>
+                            <span>தோட்டக்காரர்கள்</span>
+                        </button>
+                        <button onclick="switchTab('masterCustomers')" id="nav-masterCustomers" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-user-group w-5"></i>
+                            <span>வாடிக்கையாளர்கள்</span>
+                        </button>
+                        <button onclick="switchTab('userManagement')" id="nav-userManagement" class="nav-btn super-admin-only hidden w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-user-shield w-5 text-yellow-600"></i>
+                            <span>பயனர்கள் (User Admin)</span>
+                        </button>
+                        <button onclick="switchTab('shopProfile')" id="nav-shopProfile" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-store w-5"></i>
+                            <span>கடை விபரம்</span>
+                        </button>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content Display -->
+            <main class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 min-w-0">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-content space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-4 gap-2">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">இன்றைய வியாபார சுருக்கம் (Daily Dashboard)</h2>
+                            <p class="text-sm text-slate-500">இன்றைய நாள் மலர் வியாபார விவரங்கள்</p>
+                        </div>
+                        <span class="px-3 py-1 bg-brand-50 text-brand-700 font-semibold text-xs rounded-full border border-brand-100" id="dashTodayDate"></span>
+                    </div>
+
+                    <!-- Metrics Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 rounded-2xl p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase text-rose-600 tracking-wider">மொத்த பூக்கள் வரவு</span>
+                                <div class="w-8 h-8 rounded-lg bg-rose-200/60 flex items-center justify-center text-rose-700">
+                                    <i class="fa-solid fa-weight-hanging"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-slate-900 mt-2" id="statTodayWeight">0.00 kg</p>
+                            <p class="text-xs text-slate-500 mt-1" id="statTodayEntries">0 பதிவுகள்</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase text-emerald-600 tracking-wider">மொத்த வியாபாரம்</span>
+                                <div class="w-8 h-8 rounded-lg bg-emerald-200/60 flex items-center justify-center text-emerald-700">
+                                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-slate-900 mt-2" id="statTodayTotal">₹0</p>
+                            <p class="text-xs text-slate-500 mt-1">கொள்முதல் மதிப்பு</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase text-amber-700 tracking-wider">கமிஷன் வருமானம்</span>
+                                <div class="w-8 h-8 rounded-lg bg-amber-200/60 flex items-center justify-center text-amber-800">
+                                    <i class="fa-solid fa-percent"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-slate-900 mt-2" id="statTodayComm">₹0</p>
+                            <p class="text-xs text-slate-500 mt-1">இன்றைய கமிஷன்</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase text-indigo-700 tracking-wider">வாடிக்கையாளர் விற்பனை</span>
+                                <div class="w-8 h-8 rounded-lg bg-indigo-200/60 flex items-center justify-center text-indigo-800">
+                                    <i class="fa-solid fa-shop"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-slate-900 mt-2" id="statTodaySalesTotal">₹0</p>
+                            <p class="text-xs text-slate-500 mt-1" id="statTodaySalesWeight">0.00 kg விற்பனை</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl p-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase text-blue-600 tracking-wider">சப்ளையர் பட்டுவாடா</span>
+                                <div class="w-8 h-8 rounded-lg bg-blue-200/60 flex items-center justify-center text-blue-700">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-slate-900 mt-2" id="statTodayNetPay">₹0</p>
+                            <p class="text-xs text-slate-500 mt-1">வழங்க வேண்டியது</p>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Recent Entries -->
+                    <div class="pt-2">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-slate-800 text-base">சமீபத்திய கொள்முதல் பதிவுகள் (Recent Purchases)</h3>
+                            <button onclick="switchTab('dailyEntry')" class="text-xs text-brand-600 font-semibold hover:underline">அனைத்தையும் காண்க &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-4">தேதி</th>
+                                        <th class="py-3 px-4">தோட்டக்காரர்</th>
+                                        <th class="py-3 px-4">பூ வகை</th>
+                                        <th class="py-3 px-4 text-right">எடை (Kg)</th>
+                                        <th class="py-3 px-4 text-right">விலை (₹)</th>
+                                        <th class="py-3 px-4 text-right">மொத்த தொகை (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashRecentEntriesTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic recent entries -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: DAILY ENTRY (PURCHASE) -->
+                <section id="tab-dailyEntry" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">தோட்டக்காரர் பூக்கள் வரவு பதிவு (Supplier Daily Entry)</h2>
+                        <p class="text-sm text-slate-500">விவசாயிகளிடம் இருந்து பூக்கள் வரவு பதிவு செய்ய</p>
+                    </div>
+
+                    <!-- Daily Entry Form -->
+                    <form id="dailyEntryForm" onsubmit="handleSaveDailyEntry(event)" class="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">தேதி (Date)</label>
+                                <input type="date" id="entryDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">தோட்டக்காரர் (Supplier Name)</label>
+                                <select id="entrySupplier" onchange="autoFillSupplierDefaults()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <option value="">-- சப்ளையரை தேர்ந்தெடுக்கவும் --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பூ வகை (Flower Type)</label>
+                                <select id="entryFlower" onchange="autoFillFlowerDefaults()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <option value="">-- பூவை தேர்ந்தெடுக்கவும் --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">எடை (Weight in Kg)</label>
+                                <input type="number" step="0.001" min="0.001" id="entryWeight" oninput="calculateEntryTotals()" placeholder="0.000" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">விலை / Kg (Rate per Kg ₹)</label>
+                                <input type="number" step="0.01" min="0" id="entryRate" oninput="calculateEntryTotals()" placeholder="0.00" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கமிஷன் % (Commission %)</label>
+                                <input type="number" step="0.1" min="0" max="100" id="entryCommPercent" oninput="calculateEntryTotals()" value="10" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            </div>
+                        </div>
+
+                        <!-- Computed Calculations Box -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-white rounded-xl border border-slate-200 text-xs">
+                            <div>
+                                <span class="text-slate-500 block">மொத்த தொகை (Gross Amount):</span>
+                                <span id="calcGross" class="text-sm font-bold text-slate-800">₹0.00</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">கமிஷன் தொகை (Commission Deducted):</span>
+                                <span id="calcComm" class="text-sm font-bold text-amber-600">₹0.00</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block">விவசாயிக்கு நிகர தொகை (Net Payable):</span>
+                                <span id="calcNet" class="text-sm font-bold text-emerald-700">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" onclick="resetDailyEntryForm()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Clear</button>
+                            <button type="submit" class="px-6 py-2 text-sm font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-plus-circle"></i> பதிவு செய் (Save Purchase)
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Daily Entries Table & Filter -->
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-md">கொள்முதல் பதிவுகள் (Purchase Entries)</h3>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filterFromDate" onchange="renderDailyEntriesTable()" class="px-2.5 py-1 rounded-lg border border-slate-300 text-xs">
+                                <span class="text-xs text-slate-400">to</span>
+                                <input type="date" id="filterToDate" onchange="renderDailyEntriesTable()" class="px-2.5 py-1 rounded-lg border border-slate-300 text-xs">
+                                <select id="filterSupplierSelect" onchange="renderDailyEntriesTable()" class="px-2.5 py-1 rounded-lg border border-slate-300 text-xs">
+                                    <option value="">அனைத்து சப்ளையர்கள்</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">தேதி</th>
+                                        <th class="py-3 px-3">தோட்டக்காரர்</th>
+                                        <th class="py-3 px-3">பூ வகை</th>
+                                        <th class="py-3 px-3 text-right">எடை (Kg)</th>
+                                        <th class="py-3 px-3 text-right">விலை (₹)</th>
+                                        <th class="py-3 px-3 text-right">மொத்த தொகை (₹)</th>
+                                        <th class="py-3 px-3 text-right">கமிஷன் (₹)</th>
+                                        <th class="py-3 px-3 text-right">நிகர தொகை (₹)</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dailyEntriesTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic entries -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: CUSTOMER SALES ENTRY -->
+                <section id="tab-customerEntry" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">வாடிக்கையாளர் பூக்கள் விற்பனை பதிவு (Customer Sales Entry)</h2>
+                        <p class="text-sm text-slate-500">வாடிக்கையாளர் / சில்லறை வியாபாரிகளுக்கான விற்பனையை பதிவு செய்யவும்</p>
+                    </div>
+
+                    <!-- Customer Sales Form -->
+                    <form id="customerSalesForm" onsubmit="handleSaveCustomerSales(event)" class="bg-slate-50 p-4 md:p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">தேதி (Date)</label>
+                                <input type="date" id="salesDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">வாடிக்கையாளர் (Customer Name)</label>
+                                <select id="salesCustomer" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <option value="">-- வாடிக்கையாளரை தேர்ந்தெடுக்கவும் --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பூ வகை (Flower Type)</label>
+                                <select id="salesFlower" onchange="autoFillSalesFlowerRate()" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                                    <option value="">-- பூவை தேர்ந்தெடுக்கவும் --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">விற்பனை எடை (Weight in Kg)</label>
+                                <input type="number" step="0.001" min="0.001" id="salesWeight" oninput="calculateSalesTotals()" placeholder="0.000" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">விற்பனை விலை (Sales Rate per Kg ₹)</label>
+                                <input type="number" step="0.01" min="0" id="salesRate" oninput="calculateSalesTotals()" placeholder="0.00" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">மொத்த விற்பனை தொகை (Total Amount ₹)</label>
+                                <input type="text" id="salesTotalDisplay" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-100 font-bold text-brand-700 text-sm" value="₹0.00">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-3 pt-2">
+                            <button type="button" onclick="resetCustomerSalesForm()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-100">Clear</button>
+                            <button type="submit" class="px-6 py-2 text-sm font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-cart-plus"></i> விற்பனை பதிவு செய் (Save Sale)
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Customer Sales Table -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 text-md">இன்றைய வாடிக்கையாளர் விற்பனை பட்டியல் (Sales Entries)</h3>
+                            <div class="text-xs text-slate-500" id="salesEntriesCount">0 விற்பனைகள்</div>
+                        </div>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">தேதி</th>
+                                        <th class="py-3 px-3">வாடிக்கையாளர்</th>
+                                        <th class="py-3 px-3">பூ வகை</th>
+                                        <th class="py-3 px-3 text-right">எடை (Kg)</th>
+                                        <th class="py-3 px-3 text-right">விற்பனை விலை (₹)</th>
+                                        <th class="py-3 px-3 text-right">மொத்த தொகை (₹)</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customerSalesTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic Sales Entries -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: SUPPLIER BILL PRINT -->
+                <section id="tab-reports" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">சப்ளையர் பட்டுவாடா பில் (Supplier Settlement Bill)</h2>
+                            <p class="text-sm text-slate-500">தோட்டக்காரர்களுக்கான கமிஷன் பிடித்தம் & நிகர தொகை பில்</p>
+                        </div>
+                        <button onclick="triggerPrintSupplierBill()" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-print"></i> பில் பிரிண்ட் எடு (Print Bill)
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">தோட்டக்காரர் (Select Supplier)</label>
+                            <select id="billSupplierSelect" onchange="generateSupplierBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                                <option value="">-- சப்ளையரை தேர்வு செய்க --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ஆரம்ப தேதி (From Date)</label>
+                            <input type="date" id="billFromDate" onchange="generateSupplierBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">முடிவு தேதி (To Date)</label>
+                            <input type="date" id="billToDate" onchange="generateSupplierBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Printable Supplier Bill Box -->
+                    <div class="border border-slate-300 rounded-2xl p-4 md:p-6 bg-slate-100 flex justify-center">
+                        <div id="printable-bill-area" class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-slate-800">
+                            <div class="text-center border-b-2 border-slate-800 pb-4 mb-4">
+                                <h2 class="text-2xl font-black uppercase tracking-wide text-slate-900" id="billShopName">ஸ்ரீ லட்சுமி மலர் சந்தை</h2>
+                                <p class="text-xs text-slate-600 font-medium" id="billShopSub">கமிஷன் ஏஜென்ட் & மலர் வியாபாரம்</p>
+                                <p class="text-xs text-slate-600" id="billShopAddress">முகவரி: கோயம்பேடு, சென்னை | போன்: 9876543210</p>
+                                <div class="inline-block bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase">
+                                    சப்ளையர் கமிஷன் பில் (SETTLEMENT BILL)
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 text-xs pb-4 border-b border-slate-200 mb-4">
+                                <div>
+                                    <p class="text-slate-500 font-medium">தோட்டக்காரர் பெயர் (Farmer):</p>
+                                    <p class="text-sm font-bold text-slate-900" id="billSupplierName">-</p>
+                                    <p class="text-slate-600" id="billSupplierPhone">போன்: -</p>
+                                    <p class="text-slate-600" id="billSupplierLocation">ஊர்: -</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-slate-500 font-medium">பில் காலம்:</p>
+                                    <p class="text-xs font-bold text-slate-800" id="billPeriod">-</p>
+                                    <p class="text-slate-500 font-medium mt-1">தேதி:</p>
+                                    <p class="text-xs font-semibold text-slate-700" id="billGeneratedDate">-</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <table class="w-full text-xs text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b-2 border-slate-300 bg-slate-50 text-slate-700 font-bold">
+                                            <th class="py-2 px-1">தேதி</th>
+                                            <th class="py-2 px-1">பூ வகை</th>
+                                            <th class="py-2 px-1 text-right">எடை (Kg)</th>
+                                            <th class="py-2 px-1 text-right">விலை (₹)</th>
+                                            <th class="py-2 px-1 text-right">மொத்தம் (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="billItemsTable" class="divide-y divide-slate-200">
+                                        <tr>
+                                            <td colspan="5" class="py-4 text-center text-slate-400">சப்ளையரை தேர்ந்தெடுக்கவும்</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="border-t-2 border-slate-800 pt-3 space-y-1.5 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-slate-600">மொத்த வியாபாரம் (Gross Total):</span>
+                                    <span id="billGrossTotal" class="font-bold">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between text-amber-700">
+                                    <span class="font-medium">கடை கமிஷன் பிடித்தம் (Commission Deducted):</span>
+                                    <span id="billCommTotal" class="font-bold">- ₹0.00</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-base text-slate-900 border-t border-slate-300 pt-2">
+                                    <span>தோட்டக்காரருக்கு வழங்க வேண்டிய நிகர தொகை (Net Payable):</span>
+                                    <span id="billNetTotal" class="text-emerald-700">₹0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-12 pt-4 text-xs text-slate-500 font-medium border-t border-dashed border-slate-300">
+                                <div>
+                                    <p class="mb-8">விவசாயி கையொப்பம்</p>
+                                    <p class="border-t border-slate-400 w-32"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="mb-8">முகவர் கையொப்பம்</p>
+                                    <p class="border-t border-slate-400 w-32 ml-auto"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: CUSTOMER BILL PRINT -->
+                <section id="tab-customerBillPrint" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">வாடிக்கையாளர் ரசீது (Customer Receipt / Bill)</h2>
+                            <p class="text-sm text-slate-500">வாடிக்கையாளார்களுக்கான பில் அச்சிடுதல் மற்றும் கணக்கு விவரம்</p>
+                        </div>
+                        <button onclick="triggerPrintCustomerBill()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-print"></i> பில் பிரிண்ட் எடு (Print Bill)
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">வாடிக்கையாளர் (Select Customer)</label>
+                            <select id="custBillSelect" onchange="generateCustomerBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                                <option value="">-- வாடிக்கையாளரை தேர்வு செய்க --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ஆரம்ப தேதி (From Date)</label>
+                            <input type="date" id="custBillFromDate" onchange="generateCustomerBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">முடிவு தேதி (To Date)</label>
+                            <input type="date" id="custBillToDate" onchange="generateCustomerBill()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Printable Customer Bill Box -->
+                    <div class="border border-slate-300 rounded-2xl p-4 md:p-6 bg-slate-100 flex justify-center">
+                        <div id="printable-customer-bill-area" class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-slate-800">
+                            <div class="text-center border-b-2 border-slate-800 pb-4 mb-4">
+                                <h2 class="text-2xl font-black uppercase tracking-wide text-slate-900" id="custBillShopName">ஸ்ரீ லட்சுமி மலர் சந்தை</h2>
+                                <p class="text-xs text-slate-600 font-medium" id="custBillShopSub">கமிஷன் ஏஜென்ட் & மலர் வியாபாரம்</p>
+                                <p class="text-xs text-slate-600" id="custBillShopAddress">முகவரி: கோயம்பேடு, சென்னை | போன்: 9876543210</p>
+                                <div class="inline-block bg-indigo-900 text-white text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase">
+                                    வாடிக்கையாளர் விற்பனை பில் (CUSTOMER INVOICE)
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 text-xs pb-4 border-b border-slate-200 mb-4">
+                                <div>
+                                    <p class="text-slate-500 font-medium">வாடிக்கையாளர் (Customer Name):</p>
+                                    <p class="text-sm font-bold text-slate-900" id="cBillName">-</p>
+                                    <p class="text-slate-600" id="cBillPhone">போன்: -</p>
+                                    <p class="text-slate-600" id="cBillLocation">இடம்: -</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-slate-500 font-medium">பில் காலம்:</p>
+                                    <p class="text-xs font-bold text-slate-800" id="cBillPeriod">-</p>
+                                    <p class="text-slate-500 font-medium mt-1">தேதி:</p>
+                                    <p class="text-xs font-semibold text-slate-700" id="cBillGeneratedDate">-</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <table class="w-full text-xs text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b-2 border-slate-300 bg-slate-50 text-slate-700 font-bold">
+                                            <th class="py-2 px-1">தேதி</th>
+                                            <th class="py-2 px-1">பூ வகை</th>
+                                            <th class="py-2 px-1 text-right">எடை (Kg)</th>
+                                            <th class="py-2 px-1 text-right">விலை (₹)</th>
+                                            <th class="py-2 px-1 text-right">தொகை (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cBillItemsTable" class="divide-y divide-slate-200">
+                                        <tr>
+                                            <td colspan="5" class="py-4 text-center text-slate-400">வாடிக்கையாளரை தேர்ந்தெடுக்கவும்</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="border-t-2 border-slate-800 pt-3 space-y-1.5 text-xs">
+                                <div class="flex justify-between font-bold text-base text-slate-900">
+                                    <span>மொத்த விற்பனை தொகை (Grand Total):</span>
+                                    <span id="cBillGrandTotal" class="text-indigo-700">₹0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-12 pt-4 text-xs text-slate-500 font-medium border-t border-dashed border-slate-300">
+                                <div>
+                                    <p class="mb-8">வாடிக்கையாளர் கையொப்பம்</p>
+                                    <p class="border-t border-slate-400 w-32"></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="mb-8">கடை உரிமையாளர் கையொப்பம்</p>
+                                    <p class="border-t border-slate-400 w-32 ml-auto"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: MASTER - FLOWERS CONFIG -->
+                <section id="tab-masterFlowers" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">பூக்கள் வகை மேலாண்மை (Flowers Master)</h2>
+                        <p class="text-sm text-slate-500">சந்தையில் விற்பனை செய்யப்படும் பூக்கள் மற்றும் ஆரம்ப விலை அமைப்பு</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <form id="flowerForm" onsubmit="handleSaveFlowerMaster(event)" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 h-fit">
+                            <h3 class="font-bold text-slate-800 text-sm mb-2" id="flowerFormTitle">புதிய பூ வகை சேர்க்க</h3>
+                            <input type="hidden" id="flowerId">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பூ பெயர் (Flower Name)</label>
+                                <input type="text" id="flowerMasterName" placeholder="எ.கா: மல்லிகை" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">அலகு (Unit)</label>
+                                <input type="text" id="flowerMasterUnit" value="Kg" readonly class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-100 text-sm font-semibold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ஆரம்ப விலை / Kg (Default Rate ₹)</label>
+                                <input type="number" step="1" id="flowerMasterRate" placeholder="350" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="resetFlowerForm()" class="w-1/2 py-2 text-xs font-medium bg-white border border-slate-300 rounded-xl">Clear</button>
+                                <button type="submit" class="w-1/2 py-2 text-xs font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700">சேமிக்க</button>
+                            </div>
+                        </form>
+
+                        <div class="lg:col-span-2 overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">பூ பெயர்</th>
+                                        <th class="py-3 px-3">அலகு</th>
+                                        <th class="py-3 px-3 text-right">இயல்பு விலை (₹)</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="flowersTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic Flowers -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 7: MASTER - SUPPLIERS CONFIG -->
+                <section id="tab-masterSuppliers" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">தோட்டக்காரர்கள் மேலாண்மை (Suppliers Master)</h2>
+                        <p class="text-sm text-slate-500">பூ வழங்கும் விவசாயிகள் மற்றும் கமிஷன் விகித நிர்வகிப்பு</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <form id="supplierForm" onsubmit="handleSaveSupplierMaster(event)" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 h-fit">
+                            <h3 class="font-bold text-slate-800 text-sm mb-2" id="supplierFormTitle">புதிய தோட்டக்காரர் சேர்க்க</h3>
+                            <input type="hidden" id="supplierId">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">விவசாயி பெயர்</label>
+                                <input type="text" id="supplierMasterName" placeholder="எ.கா: கந்தசாமி" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கைபேசி எண்</label>
+                                <input type="text" id="supplierMasterPhone" placeholder="9876543210" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ஊர் / பகுதி</label>
+                                <input type="text" id="supplierMasterLocation" placeholder="எ.கா: நிலக்கோட்டை" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">முக்கிய பூ வகை</label>
+                                <select id="supplierDefaultFlower" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                                    <option value="">-- தேர்ந்தெடுக்கவும் --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">இயல்பு கமிஷன் (%)</label>
+                                <input type="number" step="0.5" id="supplierMasterComm" value="10" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="resetSupplierForm()" class="w-1/2 py-2 text-xs font-medium bg-white border border-slate-300 rounded-xl">Clear</button>
+                                <button type="submit" class="w-1/2 py-2 text-xs font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700">சேமிக்க</button>
+                            </div>
+                        </form>
+
+                        <div class="lg:col-span-2 overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">பெயர்</th>
+                                        <th class="py-3 px-3">மொபைல்</th>
+                                        <th class="py-3 px-3">ஊர்</th>
+                                        <th class="py-3 px-3 text-right">கமிஷன் (%)</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="suppliersTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic Suppliers -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 8: MASTER - CUSTOMERS CONFIG -->
+                <section id="tab-masterCustomers" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">வாடிக்கையாளர்கள் மேலாண்மை (Customers Master)</h2>
+                        <p class="text-sm text-slate-500">பூக்கள் வாங்கும் வாடிக்கையாளர்களின் விபரம் நிர்வகிப்பு</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <form id="customerForm" onsubmit="handleSaveCustomerMaster(event)" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 h-fit">
+                            <h3 class="font-bold text-slate-800 text-sm mb-2" id="customerFormTitle">புதிய வாடிக்கையாளர் சேர்க்க</h3>
+                            <input type="hidden" id="customerId">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">வாடிக்கையாளர் பெயர்</label>
+                                <input type="text" id="custMasterName" placeholder="எ.கா: ராஜா பூக்கடை" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கைபேசி எண்</label>
+                                <input type="text" id="custMasterPhone" placeholder="9876543210" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ஊர் / பகுதி</label>
+                                <input type="text" id="custMasterLocation" placeholder="எ.கா: திண்டுக்கல்" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="resetCustomerForm()" class="w-1/2 py-2 text-xs font-medium bg-white border border-slate-300 rounded-xl">Clear</button>
+                                <button type="submit" class="w-1/2 py-2 text-xs font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700">சேமிக்க</button>
+                            </div>
+                        </form>
+
+                        <div class="lg:col-span-2 overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">பெயர்</th>
+                                        <th class="py-3 px-3">மொபைல்</th>
+                                        <th class="py-3 px-3">ஊர்</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customersTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic Customers -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 9: USER MANAGEMENT (SUPER ADMIN ONLY) -->
+                <section id="tab-userManagement" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">பயனர்கள் மேலாண்மை (User Account Management)</h2>
+                        <p class="text-sm text-slate-500">சூப்பர் அட்மின் மட்டுமே புதிய பயனர்களை உருவாக்க அல்லது திருத்த முடியும்</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <form id="userForm" onsubmit="handleSaveUserMaster(event)" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3 h-fit">
+                            <h3 class="font-bold text-slate-800 text-sm mb-2" id="userFormTitle">புதிய பயனர் சேர்க்க (Add User)</h3>
+                            <input type="hidden" id="userId">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">முழு பெயர் (Full Name)</label>
+                                <input type="text" id="userFullName" placeholder="எ.கா: சுரேஷ்" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பயனர் பெயர் / Email (Username)</label>
+                                <input type="text" id="userUsername" placeholder="suresh@flower" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கடவுச்சொல் (Password)</label>
+                                <input type="text" id="userPassword" placeholder="••••••••" required class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">பங்கு (Role)</label>
+                                <select id="userRole" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                                    <option value="Staff">Staff (வழக்கமான பயனர்)</option>
+                                    <option value="Super Admin">Super Admin (சூப்பர் அட்மின்)</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="button" onclick="resetUserForm()" class="w-1/2 py-2 text-xs font-medium bg-white border border-slate-300 rounded-xl">Clear</button>
+                                <button type="submit" class="w-1/2 py-2 text-xs font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700">சேமிக்க</button>
+                            </div>
+                        </form>
+
+                        <div class="lg:col-span-2 overflow-x-auto rounded-xl border border-slate-200">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 font-semibold text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-3">பெயர்</th>
+                                        <th class="py-3 px-3">பயனர் பெயர்</th>
+                                        <th class="py-3 px-3">பங்கு (Role)</th>
+                                        <th class="py-3 px-3 text-center">செயல்பாடு</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable" class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Dynamic Users -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 10: SHOP PROFILE SETTINGS -->
+                <section id="tab-shopProfile" class="tab-content hidden space-y-6">
+                    <div class="pb-4 border-b border-slate-100">
+                        <h2 class="text-xl font-bold text-slate-900">கடை விபரங்கள் (Shop Profile)</h2>
+                        <p class="text-sm text-slate-500">பில்களில் அச்சிடப்படும் கடை பெயர் மற்றும் முகவரி விவரம்</p>
+                    </div>
+
+                    <form id="shopProfileForm" onsubmit="handleSaveShopProfile(event)" class="max-w-xl bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கடை பெயர் (Shop Name)</label>
+                            <input type="text" id="shopNameInput" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">துணை பெயர் (Sub-title)</label>
+                            <input type="text" id="shopSubInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">தொடர்பு எண்கள் (Phone Numbers)</label>
+                            <input type="text" id="shopPhoneInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">கடை முகவரி (Shop Address)</label>
+                            <textarea id="shopAddressInput" rows="3" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 text-sm font-semibold text-white bg-brand-600 rounded-xl hover:bg-brand-700 shadow-sm">
+                            கடை தகவலை புதுப்பிக்க (Save Shop Profile)
+                        </button>
+                    </form>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 mt-auto no-print">
+        <p>© 2026 பூ சந்தை பில்லிங் மென்பொருள் (Flower Market Billing Application). All rights reserved.</p>
+    </footer>
+
+    <script>
+        const STORAGE_KEY = 'FLOWER_MARKET_APP_DATA_V2';
+        const AUTH_SESSION_KEY = 'FLOWER_MARKET_LOGGED_USER';
+
+        // DEFAULT MASTER DATA SETUP
+        const initialData = {
+            users: [
+                { id: 'u_superadmin', name: 'Akash (Super Admin)', username: 'Akash@405', password: '405821', role: 'Super Admin' }
+            ],
+            shop: {
+                name: "ஸ்ரீ லட்சுமி மலர் சந்தை",
+                subtitle: "கமிஷன் ஏஜென்ட் & மலர் வியாபாரம்",
+                phone: "+91 98765 43210, 94433 12345",
+                address: "கடை எண்: 12, பூ சந்தை வளாகம், கோயம்பேடு, சென்னை - 600092"
+            },
+            flowers: [
+                { id: 'f1', name: 'மல்லிகை (Jasmine)', unit: 'Kg', defaultRate: 350 },
+                { id: 'f2', name: 'மூக்குத்தி ரோஸ் (Rose)', unit: 'Kg', defaultRate: 120 },
+                { id: 'f3', name: 'சவ்வந்தி (Marigold)', unit: 'Kg', defaultRate: 80 },
+                { id: 'f4', name: 'முல்லை (Mullai)', unit: 'Kg', defaultRate: 280 }
+            ],
+            suppliers: [
+                { id: 's1', name: 'கந்தசாமி', phone: '9842100001', location: 'நிலக்கோட்டை', defaultFlowerId: 'f1', commission: 10 },
+                { id: 's2', name: 'முருகன்', phone: '9842100002', location: 'ஒட்டன்சத்திரம்', defaultFlowerId: 'f2', commission: 10 },
+                { id: 's3', name: 'இராமையா', phone: '9842100003', location: 'சத்தியமங்கலம்', defaultFlowerId: 'f3', commission: 8 }
+            ],
+            customers: [
+                { id: 'c1', name: 'ராஜா பூக்கடை', phone: '9894011111', location: 'சென்னை' },
+                { id: 'c2', name: 'வேலன் ஸ்டோர்ஸ்', phone: '9894022222', location: 'தாம்பரம்' }
+            ],
+            entries: [],
+            customerSales: []
+        };
+
+        let appState = {};
+        let currentUser = null;
+
+        function loadAppData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                try {
+                    appState = JSON.parse(raw);
+                    // Ensure super admin exists
+                    if (!appState.users || !appState.users.some(u => u.username === 'Akash@405')) {
+                        if (!appState.users) appState.users = [];
+                        appState.users.push(initialData.users[0]);
+                    }
+                } catch (e) {
+                    appState = JSON.parse(JSON.stringify(initialData));
+                }
+            } else {
+                appState = JSON.parse(JSON.stringify(initialData));
+                const todayStr = new Date().toISOString().split('T')[0];
+                appState.entries = [
+                    { id: 'e1', date: todayStr, supplierId: 's1', flowerId: 'f1', weight: 4.5, rate: 350, gross: 1575, commPercent: 10, commAmount: 157.5, netPay: 1417.5 },
+                    { id: 'e2', date: todayStr, supplierId: 's2', flowerId: 'f2', weight: 12.0, rate: 110, gross: 1320, commPercent: 10, commAmount: 132, netPay: 1188 }
+                ];
+                appState.customerSales = [
+                    { id: 'cs1', date: todayStr, customerId: 'c1', flowerId: 'f1', weight: 2.5, rate: 400, total: 1000 }
+                ];
+                saveAppData();
+            }
+        }
+
+        function saveAppData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+
+        function resetAllData() {
+            if (confirm("அனைத்து தரவுகளையும் பழைய நிலைக்கு மீட்டமைக்க வேண்டுமா? (Reset all data?)")) {
+                localStorage.removeItem(STORAGE_KEY);
+                loadAppData();
+                initApp();
+            }
+        }
+
+        // LOGIN & ROLE AUTHENTICATION HANDLERS
+        function checkUserAuthSession() {
+            const savedSession = sessionStorage.getItem(AUTH_SESSION_KEY) || localStorage.getItem(AUTH_SESSION_KEY);
+            if (savedSession) {
+                try {
+                    const parsed = JSON.parse(savedSession);
+                    // Verify user still exists
+                    const existingUser = appState.users.find(u => u.username === parsed.username && u.password === parsed.password);
+                    if (existingUser) {
+                        currentUser = existingUser;
+                        showMainAppView();
+                        return;
+                    }
+                } catch (e) { console.error('Auth parse error'); }
+            }
+            showLoginScreenView();
+        }
+
+        function handleLocalLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim();
+            const passwordInput = document.getElementById('loginPassword').value.trim();
+            const errBox = document.getElementById('loginErrorMessage');
+
+            const foundUser = appState.users.find(u => u.username === usernameInput && u.password === passwordInput);
+
+            if (foundUser) {
+                currentUser = foundUser;
+                errBox.classList.add('hidden');
+                sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(currentUser));
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                showMainAppView();
+            } else {
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        function handleSignOut() {
+            sessionStorage.removeItem(AUTH_SESSION_KEY);
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            currentUser = null;
+            showLoginScreenView();
+        }
+
+        function showLoginScreenView() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('main-app-container').classList.add('hidden');
+        }
+
+        function showMainAppView() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('main-app-container').classList.remove('hidden');
+
+            // Set User UI Badges
+            document.getElementById('userNameDisplay').textContent = currentUser.name;
+            document.getElementById('userRoleDisplay').textContent = currentUser.role.toUpperCase();
+            document.getElementById('userAvatarText').textContent = currentUser.name.charAt(0).toUpperCase();
+
+            // Toggle Super Admin only controls
+            const superAdminElements = document.querySelectorAll('.super-admin-only');
+            if (currentUser.role === 'Super Admin') {
+                superAdminElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                superAdminElements.forEach(el => el.classList.add('hidden'));
+            }
+
+            initApp();
+        }
+
+        window.onload = function() {
+            loadAppData();
+            checkUserAuthSession();
+        };
+
+        function initApp() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entryDate').value = today;
+            document.getElementById('salesDate').value = today;
+            document.getElementById('dashTodayDate').textContent = today;
+            document.getElementById('filterFromDate').value = today;
+            document.getElementById('filterToDate').value = today;
+            document.getElementById('billFromDate').value = today;
+            document.getElementById('billToDate').value = today;
+            document.getElementById('custBillFromDate').value = today;
+            document.getElementById('custBillToDate').value = today;
+
+            updateHeaderShopUI();
+            populateSelectOptions();
+
+            renderDashboard();
+            renderDailyEntriesTable();
+            renderCustomerSalesTable();
+            renderFlowersTable();
+            renderSuppliersTable();
+            renderCustomersTable();
+            renderUsersTable();
+            populateShopProfileForm();
+
+            switchTab('dashboard');
+        }
+
+        // NAVIGATION TAB SWITCHING
+        function switchTab(tabId) {
+            // Guard User Management tab for non Super-Admins
+            if (tabId === 'userManagement' && (!currentUser || currentUser.role !== 'Super Admin')) {
+                alert('இந்த பக்கத்தை அணுக சூப்பர் அட்மின் அனுமதி தேவை (Super Admin access required)');
+                return;
+            }
+
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.add('hidden'));
+
+            const targetSection = document.getElementById(`tab-${tabId}`);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.classList.remove('bg-brand-50', 'text-brand-700');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                activeBtn.classList.add('bg-brand-50', 'text-brand-700');
+            }
+        }
+
+        function updateHeaderShopUI() {
+            document.getElementById('loginHeaderShopName').textContent = appState.shop.name;
+            document.getElementById('headerShopName').textContent = appState.shop.name;
+            document.getElementById('headerShopSub').textContent = appState.shop.subtitle;
+            document.getElementById('headerPhone').innerHTML = `<i class="fa-solid fa-phone mr-1"></i> ${appState.shop.phone}`;
+            document.getElementById('headerLocation').innerHTML = `<i class="fa-solid fa-location-dot mr-1"></i> ${appState.shop.address.split(',')[0] || ''}`;
+
+            document.getElementById('billShopName').textContent = appState.shop.name;
+            document.getElementById('billShopSub').textContent = appState.shop.subtitle;
+            document.getElementById('billShopAddress').textContent = `முகவரி: ${appState.shop.address} | போன்: ${appState.shop.phone}`;
+
+            document.getElementById('custBillShopName').textContent = appState.shop.name;
+            document.getElementById('custBillShopSub').textContent = appState.shop.subtitle;
+            document.getElementById('custBillShopAddress').textContent = `முகவரி: ${appState.shop.address} | போன்: ${appState.shop.phone}`;
+        }
+
+        function populateSelectOptions() {
+            const supplierSelects = [
+                document.getElementById('entrySupplier'),
+                document.getElementById('filterSupplierSelect'),
+                document.getElementById('billSupplierSelect')
+            ];
+
+            const flowerSelects = [
+                document.getElementById('entryFlower'),
+                document.getElementById('salesFlower'),
+                document.getElementById('supplierDefaultFlower')
+            ];
+
+            const customerSelects = [
+                document.getElementById('salesCustomer'),
+                document.getElementById('custBillSelect')
+            ];
+
+            supplierSelects.forEach(sel => {
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = sel.id === 'entrySupplier' ? '<option value="">-- சப்ளையரை தேர்ந்தெடுக்கவும் --</option>' : '<option value="">-- அனைத்து தோட்டக்காரர்கள் --</option>';
+                appState.suppliers.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = `${s.name} (${s.location || 'ஊர் இல்லை'})`;
+                    sel.appendChild(opt);
+                });
+                sel.value = currentVal;
+            });
+
+            flowerSelects.forEach(sel => {
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="">-- பூவை தேர்ந்தெடுக்கவும் --</option>';
+                appState.flowers.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f.id;
+                    opt.textContent = f.name;
+                    sel.appendChild(opt);
+                });
+                sel.value = currentVal;
+            });
+
+            customerSelects.forEach(sel => {
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="">-- வாடிக்கையாளரை தேர்ந்தெடுக்கவும் --</option>';
+                (appState.customers || []).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = `${c.name} (${c.location || ''})`;
+                    sel.appendChild(opt);
+                });
+                sel.value = currentVal;
+            });
+        }
+
+        // DAILY SUPPLIER ENTRY LOGIC
+        function autoFillSupplierDefaults() {
+            const supplierId = document.getElementById('entrySupplier').value;
+            if (!supplierId) return;
+            const supplier = appState.suppliers.find(s => s.id === supplierId);
+            if (supplier) {
+                if (supplier.defaultFlowerId) {
+                    document.getElementById('entryFlower').value = supplier.defaultFlowerId;
+                    autoFillFlowerDefaults();
+                }
+                if (supplier.commission !== undefined) {
+                    document.getElementById('entryCommPercent').value = supplier.commission;
+                }
+            }
+            calculateEntryTotals();
+        }
+
+        function autoFillFlowerDefaults() {
+            const flowerId = document.getElementById('entryFlower').value;
+            if (!flowerId) return;
+            const flower = appState.flowers.find(f => f.id === flowerId);
+            if (flower && flower.defaultRate) {
+                document.getElementById('entryRate').value = flower.defaultRate;
+            }
+            calculateEntryTotals();
+        }
+
+        function calculateEntryTotals() {
+            const weight = parseFloat(document.getElementById('entryWeight').value) || 0;
+            const rate = parseFloat(document.getElementById('entryRate').value) || 0;
+            const commPercent = parseFloat(document.getElementById('entryCommPercent').value) || 0;
+
+            const gross = weight * rate;
+            const commAmount = (gross * commPercent) / 100;
+            const netPay = gross - commAmount;
+
+            document.getElementById('calcGross').textContent = `₹${gross.toFixed(2)}`;
+            document.getElementById('calcComm').textContent = `₹${commAmount.toFixed(2)}`;
+            document.getElementById('calcNet').textContent = `₹${netPay.toFixed(2)}`;
+        }
+
+        function handleSaveDailyEntry(e) {
+            e.preventDefault();
+            const date = document.getElementById('entryDate').value;
+            const supplierId = document.getElementById('entrySupplier').value;
+            const flowerId = document.getElementById('entryFlower').value;
+            const weight = parseFloat(document.getElementById('entryWeight').value);
+            const rate = parseFloat(document.getElementById('entryRate').value);
+            const commPercent = parseFloat(document.getElementById('entryCommPercent').value);
+
+            if (!supplierId || !flowerId || isNaN(weight) || isNaN(rate)) {
+                alert('தயவுசெய்து அனைத்து விபரங்களையும் சரியாக நிரப்பவும்');
+                return;
+            }
+
+            const gross = weight * rate;
+            const commAmount = (gross * commPercent) / 100;
+            const netPay = gross - commAmount;
+
+            const newEntry = {
+                id: 'e_' + Date.now(),
+                date,
+                supplierId,
+                flowerId,
+                weight,
+                rate,
+                gross,
+                commPercent,
+                commAmount,
+                netPay
+            };
+
+            appState.entries.unshift(newEntry);
+            saveAppData();
+
+            resetDailyEntryForm();
+            renderDailyEntriesTable();
+            renderDashboard();
+        }
+
+        function resetDailyEntryForm() {
+            document.getElementById('entryWeight').value = '';
+            document.getElementById('entryRate').value = '';
+            document.getElementById('calcGross').textContent = '₹0.00';
+            document.getElementById('calcComm').textContent = '₹0.00';
+            document.getElementById('calcNet').textContent = '₹0.00';
+        }
+
+        function deleteDailyEntry(id) {
+            if (confirm('இந்த பதிவை நீக்க வேண்டுமா?')) {
+                appState.entries = appState.entries.filter(e => e.id !== id);
+                saveAppData();
+                renderDailyEntriesTable();
+                renderDashboard();
+            }
+        }
+
+        function renderDailyEntriesTable() {
+            const tbody = document.getElementById('dailyEntriesTable');
+            tbody.innerHTML = '';
+
+            const fromDate = document.getElementById('filterFromDate').value;
+            const toDate = document.getElementById('filterToDate').value;
+            const supplierId = document.getElementById('filterSupplierSelect').value;
+
+            let filtered = appState.entries;
+            if (fromDate) filtered = filtered.filter(e => e.date >= fromDate);
+            if (toDate) filtered = filtered.filter(e => e.date <= toDate);
+            if (supplierId) filtered = filtered.filter(e => e.supplierId === supplierId);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="py-6 text-center text-slate-400">பதிவுகள் எதுவும் இல்லை</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(e => {
+                const supplier = appState.suppliers.find(s => s.id === e.supplierId) || { name: 'Unknown' };
+                const flower = appState.flowers.find(f => f.id === e.flowerId) || { name: 'Unknown' };
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-medium">${e.date}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">${supplier.name}</td>
+                    <td class="py-2.5 px-3">${flower.name}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold">${e.weight.toFixed(3)}</td>
+                    <td class="py-2.5 px-3 text-right">₹${e.rate.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right font-bold">₹${e.gross.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right text-amber-600">₹${e.commAmount.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-emerald-700">₹${e.netPay.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="deleteDailyEntry('${e.id}')" class="text-rose-600 hover:text-rose-800 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // CUSTOMER SALES ENTRY FUNCTIONS
+        function autoFillSalesFlowerRate() {
+            const flowerId = document.getElementById('salesFlower').value;
+            if (!flowerId) return;
+            const flower = appState.flowers.find(f => f.id === flowerId);
+            if (flower && flower.defaultRate) {
+                document.getElementById('salesRate').value = flower.defaultRate;
+            }
+            calculateSalesTotals();
+        }
+
+        function calculateSalesTotals() {
+            const weight = parseFloat(document.getElementById('salesWeight').value) || 0;
+            const rate = parseFloat(document.getElementById('salesRate').value) || 0;
+            const total = weight * rate;
+            document.getElementById('salesTotalDisplay').value = `₹${total.toFixed(2)}`;
+        }
+
+        function handleSaveCustomerSales(e) {
+            e.preventDefault();
+            const date = document.getElementById('salesDate').value;
+            const customerId = document.getElementById('salesCustomer').value;
+            const flowerId = document.getElementById('salesFlower').value;
+            const weight = parseFloat(document.getElementById('salesWeight').value);
+            const rate = parseFloat(document.getElementById('salesRate').value);
+
+            if (!customerId || !flowerId || isNaN(weight) || isNaN(rate)) {
+                alert('தயவுசெய்து அனைத்து விவரங்களையும் சரியாக உள்ளிடவும்');
+                return;
+            }
+
+            const total = weight * rate;
+
+            const newSale = {
+                id: 'cs_' + Date.now(),
+                date,
+                customerId,
+                flowerId,
+                weight,
+                rate,
+                total
+            };
+
+            if (!appState.customerSales) appState.customerSales = [];
+            appState.customerSales.unshift(newSale);
+            saveAppData();
+
+            resetCustomerSalesForm();
+            renderCustomerSalesTable();
+            renderDashboard();
+        }
+
+        function resetCustomerSalesForm() {
+            document.getElementById('salesWeight').value = '';
+            document.getElementById('salesRate').value = '';
+            document.getElementById('salesTotalDisplay').value = '₹0.00';
+        }
+
+        function deleteCustomerSale(id) {
+            if (confirm('இந்த விற்பனை பதிவை நீக்க வேண்டுமா?')) {
+                appState.customerSales = appState.customerSales.filter(s => s.id !== id);
+                saveAppData();
+                renderCustomerSalesTable();
+                renderDashboard();
+            }
+        }
+
+        function renderCustomerSalesTable() {
+            const tbody = document.getElementById('customerSalesTable');
+            tbody.innerHTML = '';
+            const sales = appState.customerSales || [];
+            document.getElementById('salesEntriesCount').textContent = `${sales.length} விற்பனைகள்`;
+
+            if (sales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">விற்பனை பதிவுகள் எதுவும் இல்லை</td></tr>`;
+                return;
+            }
+
+            sales.forEach(sale => {
+                const customer = (appState.customers || []).find(c => c.id === sale.customerId) || { name: 'Unknown' };
+                const flower = appState.flowers.find(f => f.id === sale.flowerId) || { name: 'Unknown' };
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-medium">${sale.date}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-900">${customer.name}</td>
+                    <td class="py-2.5 px-3">${flower.name}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold">${sale.weight.toFixed(3)}</td>
+                    <td class="py-2.5 px-3 text-right">₹${sale.rate.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-brand-700">₹${sale.total.toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="deleteCustomerSale('${sale.id}')" class="text-rose-600 hover:text-rose-800 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // SUPPLIER BILL GENERATION & PRINT
+        function generateSupplierBill() {
+            const supplierId = document.getElementById('billSupplierSelect').value;
+            const fromDate = document.getElementById('billFromDate').value;
+            const toDate = document.getElementById('billToDate').value;
+
+            const supplier = appState.suppliers.find(s => s.id === supplierId);
+            document.getElementById('billGeneratedDate').textContent = new Date().toLocaleDateString('ta-IN');
+
+            if (!supplier) {
+                document.getElementById('billSupplierName').textContent = 'தோட்டக்காரரை தேர்வு செய்க';
+                document.getElementById('billSupplierPhone').textContent = 'போன்: -';
+                document.getElementById('billSupplierLocation').textContent = 'ஊர்: -';
+                document.getElementById('billPeriod').textContent = '-';
+                document.getElementById('billItemsTable').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">சப்ளையரை தேர்ந்தெடுக்கவும்</td></tr>`;
+                document.getElementById('billGrossTotal').textContent = '₹0.00';
+                document.getElementById('billCommTotal').textContent = '- ₹0.00';
+                document.getElementById('billNetTotal').textContent = '₹0.00';
+                return;
+            }
+
+            document.getElementById('billSupplierName').textContent = supplier.name;
+            document.getElementById('billSupplierPhone').textContent = `போன்: ${supplier.phone || '-'}`;
+            document.getElementById('billSupplierLocation').textContent = `ஊர்: ${supplier.location || '-'}`;
+            document.getElementById('billPeriod').textContent = `${fromDate || 'ஆரம்பம்'} முதல் ${toDate || 'இன்று'} வரை`;
+
+            let items = appState.entries.filter(e => e.supplierId === supplierId);
+            if (fromDate) items = items.filter(e => e.date >= fromDate);
+            if (toDate) items = items.filter(e => e.date <= toDate);
+
+            const tbody = document.getElementById('billItemsTable');
+            tbody.innerHTML = '';
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">குறிப்பிட்ட காலத்தில் வரவு எதுவும் இல்லை</td></tr>`;
+                document.getElementById('billGrossTotal').textContent = '₹0.00';
+                document.getElementById('billCommTotal').textContent = '- ₹0.00';
+                document.getElementById('billNetTotal').textContent = '₹0.00';
+                return;
+            }
+
+            let grossTotal = 0;
+            let commTotal = 0;
+            let netTotal = 0;
+
+            items.forEach(item => {
+                grossTotal += item.gross;
+                commTotal += item.commAmount;
+                netTotal += item.netPay;
+
+                const flower = appState.flowers.find(f => f.id === item.flowerId) || { name: 'Unknown' };
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-200';
+                tr.innerHTML = `
+                    <td class="py-1.5 px-1 font-medium">${item.date}</td>
+                    <td class="py-1.5 px-1">${flower.name}</td>
+                    <td class="py-1.5 px-1 text-right font-semibold">${item.weight.toFixed(3)}</td>
+                    <td class="py-1.5 px-1 text-right">₹${item.rate.toFixed(2)}</td>
+                    <td class="py-1.5 px-1 text-right font-bold">₹${item.gross.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('billGrossTotal').textContent = `₹${grossTotal.toFixed(2)}`;
+            document.getElementById('billCommTotal').textContent = `- ₹${commTotal.toFixed(2)}`;
+            document.getElementById('billNetTotal').textContent = `₹${netTotal.toFixed(2)}`;
+        }
+
+        function triggerPrintSupplierBill() {
+            const supplierId = document.getElementById('billSupplierSelect').value;
+            if (!supplierId) {
+                alert('தயவுசெய்து அச்சிடுவதற்கு தோட்டக்காரரை தேர்ந்தெடுக்கவும்');
+                return;
+            }
+            const billArea = document.getElementById('printable-bill-area');
+            const mainAppContainer = document.getElementById('main-app-container');
+            
+            // Move bill container out of hidden tab parent temporary for standard print
+            document.body.appendChild(billArea);
+            billArea.classList.add('printable-active');
+
+            window.print();
+
+            // Restore bill container back to its original section container
+            billArea.classList.remove('printable-active');
+            document.querySelector('#tab-reports .flex.justify-center').appendChild(billArea);
+        }
+
+        // CUSTOMER BILL PRINT GENERATION
+        function generateCustomerBill() {
+            const customerId = document.getElementById('custBillSelect').value;
+            const fromDate = document.getElementById('custBillFromDate').value;
+            const toDate = document.getElementById('custBillToDate').value;
+
+            const customer = (appState.customers || []).find(c => c.id === customerId);
+            document.getElementById('cBillGeneratedDate').textContent = new Date().toLocaleDateString('ta-IN');
+
+            if (!customer) {
+                document.getElementById('cBillName').textContent = 'வாடிக்கையாளரை தேர்வு செய்க';
+                document.getElementById('cBillPhone').textContent = 'போன்: -';
+                document.getElementById('cBillLocation').textContent = 'இடம்: -';
+                document.getElementById('cBillPeriod').textContent = '-';
+                document.getElementById('cBillItemsTable').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">வாடிக்கையாளர் தேர்வு செய்யப்படவில்லை</td></tr>`;
+                document.getElementById('cBillGrandTotal').textContent = '₹0.00';
+                return;
+            }
+
+            document.getElementById('cBillName').textContent = customer.name;
+            document.getElementById('cBillPhone').textContent = `போன்: ${customer.phone || '-'}`;
+            document.getElementById('cBillLocation').textContent = `இடம்: ${customer.location || '-'}`;
+            document.getElementById('cBillPeriod').textContent = `${fromDate || 'ஆரம்பம்'} முதல் ${toDate || 'இன்று'} வரை`;
+
+            let items = (appState.customerSales || []).filter(s => s.customerId === customerId);
+            if (fromDate) items = items.filter(s => s.date >= fromDate);
+            if (toDate) items = items.filter(s => s.date <= toDate);
+
+            const tbody = document.getElementById('cBillItemsTable');
+            tbody.innerHTML = '';
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">குறிப்பிட்ட காலத்தில் விற்பனை எதுவும் இல்லை</td></tr>`;
+                document.getElementById('cBillGrandTotal').textContent = '₹0.00';
+                return;
+            }
+
+            let grandTotal = 0;
+
+            items.forEach(item => {
+                grandTotal += item.total;
+                const flower = appState.flowers.find(f => f.id === item.flowerId) || { name: 'Unknown' };
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-200';
+                tr.innerHTML = `
+                    <td class="py-1.5 px-1 font-medium">${item.date}</td>
+                    <td class="py-1.5 px-1">${flower.name}</td>
+                    <td class="py-1.5 px-1 text-right font-semibold">${item.weight.toFixed(3)}</td>
+                    <td class="py-1.5 px-1 text-right">₹${item.rate.toFixed(2)}</td>
+                    <td class="py-1.5 px-1 text-right font-bold">₹${item.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('cBillGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+        }
+
+        function triggerPrintCustomerBill() {
+            const customerId = document.getElementById('custBillSelect').value;
+            if (!customerId) {
+                alert('தயவுசெய்து அச்சிடுவதற்கு வாடிக்கையாளரை தேர்ந்தெடுக்கவும்');
+                return;
+            }
+            const billArea = document.getElementById('printable-customer-bill-area');
+
+            // Move bill container out of hidden tab parent temporary for standard print
+            document.body.appendChild(billArea);
+            billArea.classList.add('printable-active');
+
+            window.print();
+
+            // Restore bill container back to its original section container
+            billArea.classList.remove('printable-active');
+            document.querySelector('#tab-customerBillPrint .flex.justify-center').appendChild(billArea);
+        }
+
+        // USER MANAGEMENT (SUPER ADMIN ONLY)
+        function handleSaveUserMaster(e) {
+            e.preventDefault();
+            if (!currentUser || currentUser.role !== 'Super Admin') return;
+
+            const id = document.getElementById('userId').value;
+            const name = document.getElementById('userFullName').value.trim();
+            const username = document.getElementById('userUsername').value.trim();
+            const password = document.getElementById('userPassword').value.trim();
+            const role = document.getElementById('userRole').value;
+
+            if (id) {
+                const index = appState.users.findIndex(u => u.id === id);
+                if (index !== -1) {
+                    appState.users[index] = { id, name, username, password, role };
+                }
+            } else {
+                if (appState.users.some(u => u.username === username)) {
+                    alert('இந்த பயனர் பெயர் ஏற்கனவே உள்ளது (Username already exists)');
+                    return;
+                }
+                const newUser = {
+                    id: 'u_' + Date.now(),
+                    name,
+                    username,
+                    password,
+                    role
+                };
+                appState.users.push(newUser);
+            }
+
+            saveAppData();
+            resetUserForm();
+            renderUsersTable();
+        }
+
+        function editUser(id) {
+            const user = appState.users.find(u => u.id === id);
+            if (!user) return;
+            document.getElementById('userId').value = user.id;
+            document.getElementById('userFullName').value = user.name;
+            document.getElementById('userUsername').value = user.username;
+            document.getElementById('userPassword').value = user.password;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('userFormTitle').textContent = 'பயனர் விபரம் திருத்துக';
+        }
+
+        function deleteUser(id) {
+            const user = appState.users.find(u => u.id === id);
+            if (!user) return;
+            if (user.username === 'Akash@405') {
+                alert('முதன்மை சூப்பர் அட்மின் கணக்கை நீக்க முடியாது!');
+                return;
+            }
+            if (confirm(`'${user.name}' பயனர் கணக்கை நீக்க வேண்டுமா?`)) {
+                appState.users = appState.users.filter(u => u.id !== id);
+                saveAppData();
+                renderUsersTable();
+            }
+        }
+
+        function resetUserForm() {
+            document.getElementById('userId').value = '';
+            document.getElementById('userFullName').value = '';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userRole').value = 'Staff';
+            document.getElementById('userFormTitle').textContent = 'புதிய பயனர் சேர்க்க (Add User)';
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTable');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            appState.users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${u.name}</td>
+                    <td class="py-2.5 px-3 text-xs font-mono text-slate-600">${u.username}</td>
+                    <td class="py-2.5 px-3 text-xs">
+                        <span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${u.role === 'Super Admin' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
+                            ${u.role}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center space-x-2">
+                        <button onclick="editUser('${u.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                        ${u.username !== 'Akash@405' ? `<button onclick="deleteUser('${u.id}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // FLOWER MASTER MANAGEMENT
+        function handleSaveFlowerMaster(e) {
+            e.preventDefault();
+            const id = document.getElementById('flowerId').value;
+            const name = document.getElementById('flowerMasterName').value.trim();
+            const unit = document.getElementById('flowerMasterUnit').value.trim();
+            const defaultRate = parseFloat(document.getElementById('flowerMasterRate').value) || 0;
+
+            if (id) {
+                const index = appState.flowers.findIndex(f => f.id === id);
+                if (index !== -1) {
+                    appState.flowers[index] = { id, name, unit, defaultRate };
+                }
+            } else {
+                const newFlower = {
+                    id: 'f_' + Date.now(),
+                    name,
+                    unit,
+                    defaultRate
+                };
+                appState.flowers.push(newFlower);
+            }
+
+            saveAppData();
+            resetFlowerForm();
+            renderFlowersTable();
+            populateSelectOptions();
+        }
+
+        function editFlower(id) {
+            const flower = appState.flowers.find(f => f.id === id);
+            if (!flower) return;
+            document.getElementById('flowerId').value = flower.id;
+            document.getElementById('flowerMasterName').value = flower.name;
+            document.getElementById('flowerMasterRate').value = flower.defaultRate;
+            document.getElementById('flowerFormTitle').textContent = 'பூ விபரம் திருத்துக';
+        }
+
+        function deleteFlower(id) {
+            if (confirm('இந்த பூ வகையை நீக்க வேண்டுமா?')) {
+                appState.flowers = appState.flowers.filter(f => f.id !== id);
+                saveAppData();
+                renderFlowersTable();
+                populateSelectOptions();
+            }
+        }
+
+        function resetFlowerForm() {
+            document.getElementById('flowerId').value = '';
+            document.getElementById('flowerMasterName').value = '';
+            document.getElementById('flowerMasterRate').value = '';
+            document.getElementById('flowerFormTitle').textContent = 'புதிய பூ வகை சேர்க்க';
+        }
+
+        function renderFlowersTable() {
+            const tbody = document.getElementById('flowersTable');
+            tbody.innerHTML = '';
+
+            appState.flowers.forEach(f => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${f.name}</td>
+                    <td class="py-2.5 px-3 text-xs">${f.unit}</td>
+                    <td class="py-2.5 px-3 text-right font-bold">₹${f.defaultRate}</td>
+                    <td class="py-2.5 px-3 text-center space-x-2">
+                        <button onclick="editFlower('${f.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteFlower('${f.id}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // SUPPLIER MASTER MANAGEMENT
+        function handleSaveSupplierMaster(e) {
+            e.preventDefault();
+            const id = document.getElementById('supplierId').value;
+            const name = document.getElementById('supplierMasterName').value.trim();
+            const phone = document.getElementById('supplierMasterPhone').value.trim();
+            const location = document.getElementById('supplierMasterLocation').value.trim();
+            const defaultFlowerId = document.getElementById('supplierDefaultFlower').value;
+            const commission = parseFloat(document.getElementById('supplierMasterComm').value) || 10;
+
+            if (id) {
+                const index = appState.suppliers.findIndex(s => s.id === id);
+                if (index !== -1) {
+                    appState.suppliers[index] = { id, name, phone, location, defaultFlowerId, commission };
+                }
+            } else {
+                const newSupplier = {
+                    id: 's_' + Date.now(),
+                    name,
+                    phone,
+                    location,
+                    defaultFlowerId,
+                    commission
+                };
+                appState.suppliers.push(newSupplier);
+            }
+
+            saveAppData();
+            resetSupplierForm();
+            renderSuppliersTable();
+            populateSelectOptions();
+        }
+
+        function editSupplier(id) {
+            const supplier = appState.suppliers.find(s => s.id === id);
+            if (!supplier) return;
+            document.getElementById('supplierId').value = supplier.id;
+            document.getElementById('supplierMasterName').value = supplier.name;
+            document.getElementById('supplierMasterPhone').value = supplier.phone || '';
+            document.getElementById('supplierMasterLocation').value = supplier.location || '';
+            document.getElementById('supplierDefaultFlower').value = supplier.defaultFlowerId || '';
+            document.getElementById('supplierMasterComm').value = supplier.commission !== undefined ? supplier.commission : 10;
+            document.getElementById('supplierFormTitle').textContent = 'தோட்டக்காரர் விபரம் திருத்துக';
+        }
+
+        function deleteSupplier(id) {
+            if (confirm('இந்த தோட்டக்காரரை நீக்க வேண்டுமா?')) {
+                appState.suppliers = appState.suppliers.filter(s => s.id !== id);
+                saveAppData();
+                renderSuppliersTable();
+                populateSelectOptions();
+            }
+        }
+
+        function resetSupplierForm() {
+            document.getElementById('supplierId').value = '';
+            document.getElementById('supplierMasterName').value = '';
+            document.getElementById('supplierMasterPhone').value = '';
+            document.getElementById('supplierMasterLocation').value = '';
+            document.getElementById('supplierDefaultFlower').value = '';
+            document.getElementById('supplierMasterComm').value = '10';
+            document.getElementById('supplierFormTitle').textContent = 'புதிய தோட்டக்காரர் சேர்க்க';
+        }
+
+        function renderSuppliersTable() {
+            const tbody = document.getElementById('suppliersTable');
+            tbody.innerHTML = '';
+
+            appState.suppliers.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${s.name}</td>
+                    <td class="py-2.5 px-3 text-xs">${s.phone || '-'}</td>
+                    <td class="py-2.5 px-3 text-xs">${s.location || '-'}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-amber-700">${s.commission}%</td>
+                    <td class="py-2.5 px-3 text-center space-x-2">
+                        <button onclick="editSupplier('${s.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteSupplier('${s.id}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // CUSTOMER MASTER MANAGEMENT
+        function handleSaveCustomerMaster(e) {
+            e.preventDefault();
+            const id = document.getElementById('customerId').value;
+            const name = document.getElementById('custMasterName').value.trim();
+            const phone = document.getElementById('custMasterPhone').value.trim();
+            const location = document.getElementById('custMasterLocation').value.trim();
+
+            if (!appState.customers) appState.customers = [];
+
+            if (id) {
+                const index = appState.customers.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    appState.customers[index] = { id, name, phone, location };
+                }
+            } else {
+                const newCustomer = {
+                    id: 'c_' + Date.now(),
+                    name,
+                    phone,
+                    location
+                };
+                appState.customers.push(newCustomer);
+            }
+
+            saveAppData();
+            resetCustomerForm();
+            renderCustomersTable();
+            populateSelectOptions();
+        }
+
+        function editCustomer(id) {
+            const customer = (appState.customers || []).find(c => c.id === id);
+            if (!customer) return;
+            document.getElementById('customerId').value = customer.id;
+            document.getElementById('custMasterName').value = customer.name;
+            document.getElementById('custMasterPhone').value = customer.phone || '';
+            document.getElementById('custMasterLocation').value = customer.location || '';
+            document.getElementById('customerFormTitle').textContent = 'வாடிக்கையாளர் விபரம் திருத்துக';
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('இந்த வாடிக்கையாளரை நீக்க வேண்டுமா?')) {
+                appState.customers = appState.customers.filter(c => c.id !== id);
+                saveAppData();
+                renderCustomersTable();
+                populateSelectOptions();
+            }
+        }
+
+        function resetCustomerForm() {
+            document.getElementById('customerId').value = '';
+            document.getElementById('custMasterName').value = '';
+            document.getElementById('custMasterPhone').value = '';
+            document.getElementById('custMasterLocation').value = '';
+            document.getElementById('customerFormTitle').textContent = 'புதிய வாடிக்கையாளர் சேர்க்க';
+        }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTable');
+            tbody.innerHTML = '';
+
+            (appState.customers || []).forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${c.name}</td>
+                    <td class="py-2.5 px-3 text-xs">${c.phone || '-'}</td>
+                    <td class="py-2.5 px-3 text-xs">${c.location || '-'}</td>
+                    <td class="py-2.5 px-3 text-center space-x-2">
+                        <button onclick="editCustomer('${c.id}')" class="text-blue-600 hover:text-blue-800"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteCustomer('${c.id}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // SHOP PROFILE MANAGEMENT
+        function populateShopProfileForm() {
+            document.getElementById('shopNameInput').value = appState.shop.name || '';
+            document.getElementById('shopSubInput').value = appState.shop.subtitle || '';
+            document.getElementById('shopPhoneInput').value = appState.shop.phone || '';
+            document.getElementById('shopAddressInput').value = appState.shop.address || '';
+        }
+
+        function handleSaveShopProfile(e) {
+            e.preventDefault();
+            appState.shop.name = document.getElementById('shopNameInput').value.trim();
+            appState.shop.subtitle = document.getElementById('shopSubInput').value.trim();
+            appState.shop.phone = document.getElementById('shopPhoneInput').value.trim();
+            appState.shop.address = document.getElementById('shopAddressInput').value.trim();
+
+            saveAppData();
+            updateHeaderShopUI();
+            alert('கடை விவரங்கள் வெற்றிகரமாக சேமிக்கப்பட்டன!');
+        }
+
+        // DASHBOARD SUMMARY RENDER
+        function renderDashboard() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayEntries = appState.entries.filter(e => e.date === todayStr);
+            const todaySales = (appState.customerSales || []).filter(s => s.date === todayStr);
+
+            let todayWeight = 0;
+            let todayTotal = 0;
+            let todayComm = 0;
+            let todayNet = 0;
+
+            todayEntries.forEach(e => {
+                todayWeight += e.weight;
+                todayTotal += e.gross;
+                todayComm += e.commAmount;
+                todayNet += e.netPay;
+            });
+
+            let salesTotal = 0;
+            let salesWeight = 0;
+            todaySales.forEach(s => {
+                salesTotal += s.total;
+                salesWeight += s.weight;
+            });
+
+            document.getElementById('statTodayWeight').textContent = `${todayWeight.toFixed(3)} kg`;
+            document.getElementById('statTodayEntries').textContent = `${todayEntries.length} பதிவுகள் இன்று`;
+            document.getElementById('statTodayTotal').textContent = `₹${todayTotal.toFixed(2)}`;
+            document.getElementById('statTodayComm').textContent = `₹${todayComm.toFixed(2)}`;
+            document.getElementById('statTodaySalesTotal').textContent = `₹${salesTotal.toFixed(2)}`;
+            document.getElementById('statTodaySalesWeight').textContent = `${salesWeight.toFixed(3)} kg விற்பனை`;
+            document.getElementById('statTodayNetPay').textContent = `₹${todayNet.toFixed(2)}`;
+
+            const recent = appState.entries.slice(0, 5);
+            const tbody = document.getElementById('dashRecentEntriesTable');
+            tbody.innerHTML = '';
+
+            if (recent.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-400">பதிவுகள் இல்லை</td></tr>`;
+                return;
+            }
+
+            recent.forEach(e => {
+                const supplier = appState.suppliers.find(s => s.id === e.supplierId) || { name: '-' };
+                const flower = appState.flowers.find(f => f.id === e.flowerId) || { name: '-' };
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-slate-100 hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4">${e.date}</td>
+                    <td class="py-2.5 px-4 font-semibold text-slate-900">${supplier.name}</td>
+                    <td class="py-2.5 px-4">${flower.name}</td>
+                    <td class="py-2.5 px-4 text-right font-medium">${e.weight.toFixed(3)}</td>
+                    <td class="py-2.5 px-4 text-right">₹${e.rate.toFixed(2)}</td>
+                    <td class="py-2.5 px-4 text-right font-bold text-slate-800">₹${e.gross.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
